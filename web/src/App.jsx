@@ -20,10 +20,10 @@ function App() {
     textShadow: '2px 2px 4px rgba(0, 0, 0, 0.1)',
     letterSpacing: 2
   })
-  const [wheelPosition, setWheelPosition] = useState({ x: 20, y: 80 })
+  const [wheelPosition, setWheelPosition] = useState({ x: 20, y: 100 })
   const [wheelSize, setWheelSize] = useState({ width: 400, height: 400 })
   const [awardListPosition, setAwardListPosition] = useState({ x: 20, y: 20 })
-  const [awardListSize, setAwardListSize] = useState({ width: 120, height: 160 })
+  const [awardListSize, setAwardListSize] = useState({ width: 300, height: 160 })
   const [winnerMessagePosition, setWinnerMessagePosition] = useState({ x: 100, y: 100 })
   const [winnerMessageSize, setWinnerMessageSize] = useState({ width: 300, height: 80 })
   const [showPasswordModal, setShowPasswordModal] = useState(false)

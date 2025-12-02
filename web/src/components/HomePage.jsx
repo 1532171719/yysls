@@ -24,8 +24,6 @@ function HomePage({
   const [showStatsModal, setShowStatsModal] = useState(false)
   const [winner, setWinner] = useState(null)
   const [winningAward, setWinningAward] = useState(null)
-  const [drawnParticipants, setDrawnParticipants] = useState(new Set())
-  const [drawnAwards, setDrawnAwards] = useState(new Set())
   const [disabledRule1Awards, setDisabledRule1Awards] = useState(new Set())
   const [disabledRule2Awards, setDisabledRule2Awards] = useState(new Set())
   const [selectedAwardId, setSelectedAwardId] = useState(null)
@@ -36,10 +34,8 @@ function HomePage({
   const handleDraw = (drawnParticipant, drawnAward) => {
     setWinner(drawnParticipant)
     setWinningAward(drawnAward)
-    setDrawnParticipants(prev => new Set([...prev, drawnParticipant.id]))
-    setDrawnAwards(prev => new Set([...prev, drawnAward.id]))
     
-    // 记录中奖者
+    // 记录中奖者（用于统计每个奖项的抽取次数）
     setAwardWinners(prev => {
       const newWinners = { ...prev }
       if (!newWinners[drawnAward.id]) {
@@ -77,16 +73,44 @@ function HomePage({
   }
 
   const handleReset = () => {
-    if (window.confirm('确定要重新开始吗？这将清除所有抽奖记录。')) {
-      setWinner(null)
-      setWinningAward(null)
-      setDrawnParticipants(new Set())
-      setDrawnAwards(new Set())
-      setDisabledRule1Awards(new Set())
-      setDisabledRule2Awards(new Set())
-      setAwardWinners({})
-      setManualDrawnCounts({})
-      setDrawHistory([])
+    if (!selectedAwardId) {
+      alert('请先选择一个奖项！')
+      return
+    }
+    
+    if (window.confirm(`确定要重置当前奖项"${selectedAward?.name || '奖项'}"的抽取数吗？历史记录将保留。`)) {
+      // 只重置当前奖项的抽取数
+      // 清除当前奖项的中奖者记录
+      const newAwardWinners = { ...awardWinners }
+      if (newAwardWinners[selectedAwardId]) {
+        delete newAwardWinners[selectedAwardId]
+      }
+      setAwardWinners(newAwardWinners)
+      
+      // 重置当前奖项的手动输入数量
+      const newManualDrawnCounts = { ...manualDrawnCounts }
+      if (newManualDrawnCounts[selectedAwardId] !== undefined) {
+        delete newManualDrawnCounts[selectedAwardId]
+      }
+      setManualDrawnCounts(newManualDrawnCounts)
+      
+      // 清除当前奖项的规则禁用状态
+      const awardRule = awardRules[selectedAwardId]
+      if (awardRule === 'rule1') {
+        const newDisabledRule1Awards = new Set(disabledRule1Awards)
+        newDisabledRule1Awards.delete(selectedAwardId)
+        setDisabledRule1Awards(newDisabledRule1Awards)
+      } else if (awardRule === 'rule2') {
+        const newDisabledRule2Awards = new Set(disabledRule2Awards)
+        newDisabledRule2Awards.delete(selectedAwardId)
+        setDisabledRule2Awards(newDisabledRule2Awards)
+      }
+      
+      // 清除当前显示的中奖信息（如果中奖的是当前奖项）
+      if (winningAward && winningAward.id === selectedAwardId) {
+        setWinner(null)
+        setWinningAward(null)
+      }
     }
   }
 
@@ -102,9 +126,9 @@ function HomePage({
   // 统计已中奖和剩余数量
   const getAwardStats = () => {
     return awards.map(award => {
-      // 使用手动输入的数量，如果没有则使用自动统计的数量
+      // 使用手动输入的数量，如果没有则使用 awardWinners 统计的数量
       const manualCount = manualDrawnCounts[award.id]
-      const autoCount = Array.from(drawnAwards).filter(id => id === award.id).length
+      const autoCount = awardWinners[award.id] ? awardWinners[award.id].length : 0
       const drawnCount = manualCount !== undefined ? manualCount : autoCount
       
       // 计算剩余数量
@@ -116,6 +140,14 @@ function HomePage({
         remaining: remaining
       }
     })
+  }
+  
+  // 获取当前选中奖项的抽取次数
+  const getSelectedAwardDrawnCount = () => {
+    if (!selectedAwardId) return 0
+    const manualCount = manualDrawnCounts[selectedAwardId]
+    const autoCount = awardWinners[selectedAwardId] ? awardWinners[selectedAwardId].length : 0
+    return manualCount !== undefined ? manualCount : autoCount
   }
 
   const awardStats = getAwardStats()
@@ -195,11 +227,10 @@ function HomePage({
               participants={participants}
               awards={awards}
               awardRules={awardRules}
-              drawnParticipants={drawnParticipants}
-              drawnAwards={drawnAwards}
               disabledRule1Awards={disabledRule1Awards}
               disabledRule2Awards={disabledRule2Awards}
               selectedAwardId={selectedAwardId}
+              selectedAwardDrawnCount={getSelectedAwardDrawnCount()}
               manualDrawnCounts={manualDrawnCounts}
               wheelSize={wheelSize}
               onDraw={handleDraw}

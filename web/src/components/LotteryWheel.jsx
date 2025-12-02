@@ -1,63 +1,46 @@
 import React, { useState, useRef, useEffect } from 'react'
 import './LotteryWheel.css'
 
-function LotteryWheel({ participants, awards, awardRules, drawnParticipants, drawnAwards, disabledRule1Awards, disabledRule2Awards, selectedAwardId, manualDrawnCounts, wheelSize, onDraw }) {
+function LotteryWheel({ participants, awards, awardRules, disabledRule1Awards, disabledRule2Awards, selectedAwardId, selectedAwardDrawnCount, manualDrawnCounts, wheelSize, onDraw }) {
   const [isSpinning, setIsSpinning] = useState(false)
   const [rotation, setRotation] = useState(0)
   const canvasRef = useRef(null)
 
   // 计算可用的参与者和奖项
+  // 不限制参与者，允许参与者参与多个奖项的抽奖
   const getAvailableParticipants = () => {
-    return participants.filter(p => !drawnParticipants.has(p.id))
+    return participants
   }
 
   const getAvailableAwards = () => {
-    // 如果指定了选中的奖项，只从该奖项中抽取
-    if (selectedAwardId) {
-      const selectedAward = awards.find(a => a.id === selectedAwardId)
-      if (!selectedAward) return []
-      
-      const awardRule = awardRules[selectedAward.id] || 'rule1'
-      
-      // 检查是否被对应规则禁用
-      if (awardRule === 'rule1' && disabledRule1Awards.has(selectedAward.id)) {
-        return []
-      }
-      if (awardRule === 'rule2' && disabledRule2Awards.has(selectedAward.id)) {
-        return []
-      }
-      
-      // 检查数量限制 - 使用手动输入的数量或自动统计的数量
-      const manualCount = manualDrawnCounts && manualDrawnCounts[selectedAward.id]
-      const autoCount = Array.from(drawnAwards).filter(id => id === selectedAward.id).length
-      const drawnCount = manualCount !== undefined ? manualCount : autoCount
-      
-      if (drawnCount >= selectedAward.quantity) {
-        return []
-      }
-      
-      return [selectedAward]
+    // 必须选中奖项才能抽奖
+    if (!selectedAwardId) {
+      return []
     }
     
-    // 如果没有选中奖项，从所有可用奖项中随机选择
-    return awards.filter(award => {
-      const awardRule = awardRules[award.id] || 'rule1'
-      
-      // 检查是否被对应规则禁用
-      if (awardRule === 'rule1' && disabledRule1Awards.has(award.id)) {
-        return false
-      }
-      if (awardRule === 'rule2' && disabledRule2Awards.has(award.id)) {
-        return false
-      }
-      
-      // 检查数量限制 - 使用手动输入的数量或自动统计的数量
-      const manualCount = manualDrawnCounts && manualDrawnCounts[award.id]
-      const autoCount = Array.from(drawnAwards).filter(id => id === award.id).length
-      const drawnCount = manualCount !== undefined ? manualCount : autoCount
-      
-      return drawnCount < award.quantity
-    })
+    const selectedAward = awards.find(a => a.id === selectedAwardId)
+    if (!selectedAward) return []
+    
+    const awardRule = awardRules[selectedAward.id] || 'rule1'
+    
+    // 检查是否被对应规则禁用
+    if (awardRule === 'rule1' && disabledRule1Awards.has(selectedAward.id)) {
+      return []
+    }
+    if (awardRule === 'rule2' && disabledRule2Awards.has(selectedAward.id)) {
+      return []
+    }
+    
+      // 检查数量限制 - 使用手动输入的数量或外部传入的统计数量
+      const manualCount = manualDrawnCounts && manualDrawnCounts[selectedAward.id]
+      const drawnCount = manualCount !== undefined ? manualCount : (selectedAwardDrawnCount || 0)
+    
+    // 如果当前选中奖项已达到最大数量，不允许再抽
+    if (drawnCount >= selectedAward.quantity) {
+      return []
+    }
+    
+    return [selectedAward]
   }
 
 
@@ -200,60 +183,40 @@ function LotteryWheel({ participants, awards, awardRules, drawnParticipants, dra
         resizeObserver.disconnect()
       }
     }
-  }, [participants, drawnParticipants, rotation, wheelSize])
+  }, [participants, rotation, wheelSize])
 
   const handleSpin = () => {
     if (isSpinning) return
 
     const availableParticipants = getAvailableParticipants()
-    let availableAwards = getAvailableAwards()
+    const availableAwards = getAvailableAwards()
 
-    // 如果选中的奖项已经抽完，尝试从所有可用奖项中抽取
-    if (selectedAwardId && availableAwards.length === 0) {
-      // 从所有可用奖项中查找（不包括被对应规则禁用的）
-      availableAwards = awards.filter(award => {
-        const awardRule = awardRules[award.id] || 'rule1'
-        
-        // 检查是否被对应规则禁用
-        if (awardRule === 'rule1' && disabledRule1Awards.has(award.id)) {
-          return false
-        }
-        if (awardRule === 'rule2' && disabledRule2Awards.has(award.id)) {
-          return false
-        }
-        
-        // 检查数量限制 - 按奖项ID统计
-        const manualCount = manualDrawnCounts && manualDrawnCounts[award.id]
-        const autoCount = Array.from(drawnAwards).filter(id => id === award.id).length
-        const drawnCount = manualCount !== undefined ? manualCount : autoCount
-        
-        return drawnCount < award.quantity
-      })
-      
-      if (availableAwards.length === 0) {
-        alert('所有奖项都已抽完！')
-        return
-      } else {
-        alert(`选中的奖项已抽完，将从其他可用奖项中抽取。`)
-      }
+    // 如果没有选中奖项，提示选择奖项
+    if (!selectedAwardId) {
+      alert('请先选择一个奖项！')
+      return
     }
 
-    if (availableParticipants.length === 0 || availableAwards.length === 0) {
-      alert('没有可用的参与者或奖项！')
+    // 如果当前选中的奖项已经抽完，不允许再抽
+    if (availableAwards.length === 0) {
+      const selectedAward = awards.find(a => a.id === selectedAwardId)
+      if (selectedAward) {
+        alert(`当前奖项"${selectedAward.name}"已达到最大抽取数量，无法继续抽取！`)
+      } else {
+        alert('当前选中的奖项不存在！')
+      }
+      return
+    }
+
+    if (availableParticipants.length === 0) {
+      alert('没有可用的参与者！')
       return
     }
 
     setIsSpinning(true)
 
-    // 选择奖项（如果指定了选中奖项，直接使用；否则随机选择）
-    let selectedAward = null
-    if (selectedAwardId) {
-      selectedAward = availableAwards.find(a => a.id === selectedAwardId)
-    }
-    if (!selectedAward && availableAwards.length > 0) {
-      const randomAwardIndex = Math.floor(Math.random() * availableAwards.length)
-      selectedAward = availableAwards[randomAwardIndex]
-    }
+    // 直接使用当前选中的奖项
+    const selectedAward = availableAwards[0]
 
     // 根据奖项规则选择参与者
     let selectedParticipant = null
