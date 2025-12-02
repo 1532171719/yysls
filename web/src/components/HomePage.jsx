@@ -177,13 +177,6 @@ function HomePage({
         >
           我真是服啦百业周年庆！
         </h1>
-        <div className="header-actions">
-          <button className="action-btn share-btn">分享</button>
-          <button className="action-btn edit-btn">编辑</button>
-          <button className="icon-btn">🔍</button>
-          <button className="icon-btn">📄</button>
-          <button className="icon-btn">⋯</button>
-        </div>
       </div>
 
       {/* 转盘 - 右上角 */}

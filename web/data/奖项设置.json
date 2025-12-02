@@ -1,0 +1,26 @@
+[
+  {
+    "name": "6",
+    "quantity": 6,
+    "rule": "rule1",
+    "image": "/素材库/6.png"
+  },
+  {
+    "name": "68",
+    "quantity": 3,
+    "rule": "rule1",
+    "image": "/素材库/68.png"
+  },
+  {
+    "name": "128",
+    "quantity": 2,
+    "rule": "rule2",
+    "image": "/素材库/128.png"
+  },
+  {
+    "name": "258",
+    "quantity": 1,
+    "rule": "rule2",
+    "image": "/素材库/258.png"
+  }
+]
