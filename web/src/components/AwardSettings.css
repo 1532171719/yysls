@@ -1,0 +1,131 @@
+.award-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.award-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #ddd;
+}
+
+.award-table th,
+.award-table td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.award-table th {
+  background: #f5f5f5;
+  font-weight: bold;
+}
+
+.table-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.table-input:focus {
+  outline: none;
+  border-color: #1890ff;
+}
+
+.rule-select {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.rule-select:focus {
+  outline: none;
+  border-color: #1890ff;
+}
+
+.delete-btn {
+  padding: 6px 12px;
+  background: #ff4d4f;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.delete-btn:hover {
+  background: #ff7875;
+}
+
+.image-select-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.image-input {
+  width: 100%;
+}
+
+.image-preview {
+  width: 80px;
+  height: 80px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f5f5f5;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.award-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.add-btn {
+  padding: 12px 24px;
+  background: #52c41a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.add-btn:hover {
+  background: #73d13d;
+}
+
+.save-btn {
+  padding: 12px 24px;
+  background: #1890ff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.save-btn:hover {
+  background: #40a9ff;
+}
+
