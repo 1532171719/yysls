@@ -226,24 +226,6 @@ function LotteryWheel({ participants, awards, awardRules, drawnParticipants, dra
 
     setIsSpinning(true)
 
-    // 根据权重计算概率
-    const totalWeight = availableParticipants.reduce((sum, p) => sum + (p.weight || 1), 0)
-    const random = Math.random() * totalWeight
-    let cumulativeWeight = 0
-    let selectedParticipant = null
-
-    for (const participant of availableParticipants) {
-      cumulativeWeight += participant.weight || 1
-      if (random <= cumulativeWeight) {
-        selectedParticipant = participant
-        break
-      }
-    }
-
-    if (!selectedParticipant) {
-      selectedParticipant = availableParticipants[0]
-    }
-
     // 选择奖项（如果指定了选中奖项，直接使用；否则随机选择）
     let selectedAward = null
     if (selectedAwardId) {
@@ -252,6 +234,33 @@ function LotteryWheel({ participants, awards, awardRules, drawnParticipants, dra
     if (!selectedAward && availableAwards.length > 0) {
       const randomAwardIndex = Math.floor(Math.random() * availableAwards.length)
       selectedAward = availableAwards[randomAwardIndex]
+    }
+
+    // 根据奖项规则选择参与者
+    let selectedParticipant = null
+    const awardRule = awardRules[selectedAward.id] || 'rule1'
+    
+    if (awardRule === 'rule1') {
+      // 规则1：平均分配，不考虑权重
+      const randomIndex = Math.floor(Math.random() * availableParticipants.length)
+      selectedParticipant = availableParticipants[randomIndex]
+    } else {
+      // 规则2：根据权重计算概率
+      const totalWeight = availableParticipants.reduce((sum, p) => sum + (p.weight || 1), 0)
+      const random = Math.random() * totalWeight
+      let cumulativeWeight = 0
+
+      for (const participant of availableParticipants) {
+        cumulativeWeight += participant.weight || 1
+        if (random <= cumulativeWeight) {
+          selectedParticipant = participant
+          break
+        }
+      }
+
+      if (!selectedParticipant) {
+        selectedParticipant = availableParticipants[0]
+      }
     }
 
     // 计算旋转角度 - 指针在正上方（-90度或270度），需要让选中的参与者停在正上方

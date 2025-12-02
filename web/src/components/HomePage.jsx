@@ -30,6 +30,7 @@ function HomePage({
   const [selectedAwardId, setSelectedAwardId] = useState(null)
   const [awardWinners, setAwardWinners] = useState({}) // { awardId: [winnerName1, winnerName2, ...] }
   const [manualDrawnCounts, setManualDrawnCounts] = useState({}) // { awardId: drawnCount }
+  const [drawHistory, setDrawHistory] = useState([]) // [{ index: 1, winnerName: 'xxx', awardName: 'xxx' }, ...]
 
   const handleDraw = (drawnParticipant, drawnAward) => {
     setWinner(drawnParticipant)
@@ -46,6 +47,16 @@ function HomePage({
       newWinners[drawnAward.id].push(drawnParticipant.name)
       return newWinners
     })
+    
+    // 记录历史
+    setDrawHistory(prev => [
+      ...prev,
+      {
+        index: prev.length + 1,
+        winnerName: drawnParticipant.name,
+        awardName: drawnAward.name
+      }
+    ])
     
     // 如果抽中的是规则2的奖项，禁用所有其他规则2的奖项
     if (awardRules[drawnAward.id] === 'rule2') {
@@ -65,6 +76,7 @@ function HomePage({
       setDisabledRule2Awards(new Set())
       setAwardWinners({})
       setManualDrawnCounts({})
+      setDrawHistory([])
     }
   }
 
@@ -139,7 +151,7 @@ function HomePage({
         <div className="header-left">
           <button className="back-btn">主页</button>
           <button className="stats-btn" onClick={() => setShowStatsModal(true)}>
-            中奖情况
+            中奖历史
           </button>
         </div>
         <h1 
@@ -242,11 +254,10 @@ function HomePage({
         </button>
       </div>
 
-      {/* 中奖情况弹窗 */}
+      {/* 中奖历史弹窗 */}
       {showStatsModal && (
         <WinnerStatsModal
-          awards={awards}
-          manualDrawnCounts={manualDrawnCounts}
+          drawHistory={drawHistory}
           onClose={() => setShowStatsModal(false)}
         />
       )}

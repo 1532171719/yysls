@@ -62,6 +62,67 @@ function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange 
     alert('保存成功！')
   }
 
+  const handleImport = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result)
+          
+          // 验证数据格式
+          if (!Array.isArray(data)) {
+            alert('导入失败：文件格式不正确，应为JSON数组格式')
+            return
+          }
+
+          // 验证每个对象是否有必要的字段
+          const isValid = data.every(item => 
+            item && 
+            (typeof item.name === 'string' || item.name === '') &&
+            (typeof item.quantity === 'number' || typeof item.quantity === 'string')
+          )
+
+          if (!isValid) {
+            alert('导入失败：数据格式不正确，每个对象应包含 name 和 quantity 字段')
+            return
+          }
+
+          // 转换数据格式，添加id和默认值
+          const importedAwards = data.map((item, index) => ({
+            id: Date.now() + index,
+            name: item.name || '',
+            quantity: parseInt(item.quantity) || 1,
+            rule: item.rule || 'rule1',
+            image: item.image || '/素材库/奖项1.png'
+          }))
+
+          // 导入规则
+          const importedRules = {}
+          importedAwards.forEach((award, index) => {
+            if (data[index] && data[index].rule) {
+              importedRules[award.id] = data[index].rule
+            }
+          })
+
+          setLocalAwards(importedAwards)
+          onAwardsChange(importedAwards)
+          onAwardRulesChange(importedRules)
+          alert(`成功导入 ${importedAwards.length} 条记录`)
+        } catch (error) {
+          alert('导入失败：' + error.message)
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+  }
+
   return (
     <div className="award-settings">
       <table className="award-table">
@@ -142,6 +203,9 @@ function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange 
       </table>
 
       <div className="award-actions">
+        <button className="import-btn" onClick={handleImport}>
+          导入
+        </button>
         <button className="add-btn" onClick={handleAddRow}>
           添加奖项
         </button>

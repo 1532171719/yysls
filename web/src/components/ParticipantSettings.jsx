@@ -72,6 +72,57 @@ function ParticipantSettings({ participants, onParticipantsChange }) {
     onParticipantsChange(calculatedParticipants)
   }
 
+  const handleImport = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json'
+    input.onchange = (e) => {
+      const file = e.target.files[0]
+      if (!file) return
+
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        try {
+          const data = JSON.parse(event.target.result)
+          
+          // 验证数据格式
+          if (!Array.isArray(data)) {
+            alert('导入失败：文件格式不正确，应为JSON数组格式')
+            return
+          }
+
+          // 验证每个对象是否有必要的字段
+          const isValid = data.every(item => 
+            item && 
+            (typeof item.name === 'string' || item.name === '') &&
+            (typeof item.weight === 'number' || typeof item.weight === 'string')
+          )
+
+          if (!isValid) {
+            alert('导入失败：数据格式不正确，每个对象应包含 name 和 weight 字段')
+            return
+          }
+
+          // 转换数据格式，添加id
+          const importedParticipants = data.map((item, index) => ({
+            id: Date.now() + index,
+            name: item.name || '',
+            weight: parseFloat(item.weight) || 1,
+            probability: 0
+          }))
+
+          setLocalParticipants(importedParticipants)
+          setIsCalculated(false)
+          alert(`成功导入 ${importedParticipants.length} 条记录`)
+        } catch (error) {
+          alert('导入失败：' + error.message)
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+  }
+
   return (
     <div className="participant-settings">
       <table className="participant-table">
@@ -124,6 +175,9 @@ function ParticipantSettings({ participants, onParticipantsChange }) {
       </table>
 
       <div className="participant-actions">
+        <button className="import-btn" onClick={handleImport}>
+          导入
+        </button>
         <button className="add-btn" onClick={handleAddRow}>
           添加行
         </button>
