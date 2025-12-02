@@ -26,6 +26,7 @@ function HomePage({
   const [winningAward, setWinningAward] = useState(null)
   const [drawnParticipants, setDrawnParticipants] = useState(new Set())
   const [drawnAwards, setDrawnAwards] = useState(new Set())
+  const [disabledRule1Awards, setDisabledRule1Awards] = useState(new Set())
   const [disabledRule2Awards, setDisabledRule2Awards] = useState(new Set())
   const [selectedAwardId, setSelectedAwardId] = useState(null)
   const [awardWinners, setAwardWinners] = useState({}) // { awardId: [winnerName1, winnerName2, ...] }
@@ -58,6 +59,14 @@ function HomePage({
       }
     ])
     
+    // 如果抽中的是规则1的奖项，禁用所有其他规则1的奖项
+    if (awardRules[drawnAward.id] === 'rule1') {
+      const rule1AwardIds = Object.keys(awardRules).filter(
+        id => awardRules[id] === 'rule1' && id !== drawnAward.id
+      )
+      setDisabledRule1Awards(prev => new Set([...prev, ...rule1AwardIds]))
+    }
+    
     // 如果抽中的是规则2的奖项，禁用所有其他规则2的奖项
     if (awardRules[drawnAward.id] === 'rule2') {
       const rule2AwardIds = Object.keys(awardRules).filter(
@@ -73,6 +82,7 @@ function HomePage({
       setWinningAward(null)
       setDrawnParticipants(new Set())
       setDrawnAwards(new Set())
+      setDisabledRule1Awards(new Set())
       setDisabledRule2Awards(new Set())
       setAwardWinners({})
       setManualDrawnCounts({})
@@ -188,18 +198,19 @@ function HomePage({
           zIndex: 10
         }}
       >
-        <LotteryWheel
-          participants={participants}
-          awards={awards}
-          awardRules={awardRules}
-          drawnParticipants={drawnParticipants}
-          drawnAwards={drawnAwards}
-          disabledRule2Awards={disabledRule2Awards}
-          selectedAwardId={selectedAwardId}
-          manualDrawnCounts={manualDrawnCounts}
-          wheelSize={wheelSize}
-          onDraw={handleDraw}
-        />
+            <LotteryWheel
+              participants={participants}
+              awards={awards}
+              awardRules={awardRules}
+              drawnParticipants={drawnParticipants}
+              drawnAwards={drawnAwards}
+              disabledRule1Awards={disabledRule1Awards}
+              disabledRule2Awards={disabledRule2Awards}
+              selectedAwardId={selectedAwardId}
+              manualDrawnCounts={manualDrawnCounts}
+              wheelSize={wheelSize}
+              onDraw={handleDraw}
+            />
       </div>
 
       {/* 奖项图片列表 - 左下角 */}
