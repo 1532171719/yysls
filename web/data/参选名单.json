@@ -1,50 +1,112 @@
 [
   {
     "name": "烏鸦鸦",
-    "weight": 1.0
+    "weight": 100.0,
+    "level": 3
   },
   {
     "name": "郭承",
-    "weight": 1.0
+    "weight": 2.0,
+    "level": 3
   },
   {
     "name": "立小夏",
-    "weight": 1.0
+    "weight": 100.0,
+    "level": 3
   },
   {
     "name": "庆小",
-    "weight": 1.0
+    "weight": 1.0,
+    "level": 3
   },
   {
     "name": "夜澜倾城",
-    "weight": 1.0
-  },
-  {
-    "name": "冉冉",
-    "weight": 1.0
-  },
-  {
-    "name": "霖霖",
-    "weight": 1.0
-  },
-  {
-    "name": "小有",
-    "weight": 1.0
-  },
-  {
-    "name": "司徒",
-    "weight": 1.0
+    "weight": 1.0,
+    "level": 3
   },
   {
     "name": "魏少卿",
-    "weight": 1.0
+    "weight": 2.0,
+    "level": 3
   },
   {
-    "name": "江云",
-    "weight": 1.0
+    "name": "江云熙",
+    "weight": 1.0,
+    "level": 3
   },
   {
     "name": "琴房",
-    "weight": 1.0
+    "weight": 2.0,
+    "level": 3
+  },
+  {
+    "name": "之之",
+    "weight": 1.0,
+    "level": 3
+  },
+  {
+    "name": "肥鱼",
+    "weight": 4.0,
+    "level": 3
+  },
+  {
+    "name": "大饼",
+    "weight": 4.0,
+    "level": 3
+  },
+  {
+    "name": "披风",
+    "weight": 2.0,
+    "level": 3
+  },
+  {
+    "name": "司徒",
+    "weight": 1.0,
+    "level": 3
+  },
+  {
+    "name": "詹姆斯",
+    "weight": 1.0,
+    "level": 2
+  },
+  {
+    "name": "小有",
+    "weight": 2.0,
+    "level": 2
+  },
+  {
+    "name": "冉冉",
+    "weight": 1.0,
+    "level": 2
+  },
+  {
+    "name": "小猫咪",
+    "weight": 0.0,
+    "level": 1
+  },
+  {
+    "name": "山雨",
+    "weight": 0.0,
+    "level": 1
+  },
+  {
+    "name": "江无岿",
+    "weight": 0.0,
+    "level": 1
+  },
+  {
+    "name": "释惑",
+    "weight": 0.0,
+    "level": 1
+  },
+  {
+    "name": "竹子",
+    "weight": 0.0,
+    "level": 1
+  },
+  {
+    "name": "霖霖",
+    "weight": 0.0,
+    "level": 1
   }
 ]

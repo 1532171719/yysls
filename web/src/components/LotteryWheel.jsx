@@ -1,324 +1,366 @@
-import React, { useState, useRef, useEffect } from 'react'
-import './LotteryWheel.css'
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import './LotteryWheel.css';
 
-function LotteryWheel({ participants, awards, awardRules, disabledRule1Awards, disabledRule2Awards, selectedAwardId, selectedAwardDrawnCount, manualDrawnCounts, wheelSize, onDraw }) {
-  const [isSpinning, setIsSpinning] = useState(false)
-  const [rotation, setRotation] = useState(0)
-  const canvasRef = useRef(null)
+const DEFAULT_WHEEL_SIZE = 400;
+const SPIN_DURATION = 3000;
+const DEFAULT_SEGMENT_COLORS = ['#e6f7ff', '#bae7ff'];
+const MIN_PARTICIPANTS = 1;
 
-  // 计算可用的参与者和奖项
-  // 不限制参与者，允许参与者参与多个奖项的抽奖
-  const getAvailableParticipants = () => {
-    return participants
-  }
+function LotteryWheel({
+  participants = [],
+  awards = [],
+  selectedAwardId,
+  selectedAwardDrawnCount = 0,
+  manualDrawnCounts = {},
+  wheelSize,
+  drawnParticipants = new Set(), 
+  onDraw,
+  spinCycles = 5,
+  textFont = '16px Arial',
+  segmentColors = DEFAULT_SEGMENT_COLORS,
+  pointerColor = '#ff4d4f',
+  buttonText = '开始抽奖',
+  spinningText = '抽奖中...',
+}) {
+  const [isSpinning, setIsSpinning] = useState(false);
+  const [rotation, setRotation] = useState(0);
+  const canvasRef = useRef(null);
+  const resizeObserverRef = useRef(null);
 
-  const getAvailableAwards = () => {
-    // 必须选中奖项才能抽奖
-    if (!selectedAwardId) {
-      return []
+  const availableAwards = useCallback(() => {
+    if (!selectedAwardId) return [];
+    const selectedAward = awards.find(a => a.id === selectedAwardId);
+    if (!selectedAward) return [];
+
+    const manualCount = manualDrawnCounts[selectedAward.id];
+    const drawnCount = manualCount ?? selectedAwardDrawnCount;
+
+    if (drawnCount >= selectedAward.quantity) return [];
+
+    return [selectedAward];
+  }, [
+    selectedAwardId,
+    awards,
+    manualDrawnCounts,
+    selectedAwardDrawnCount,
+  ]);
+
+  const allParticipants = useCallback(() => {
+    return participants.filter(p => p?.id) || [];
+  }, [participants]);
+
+  const availableParticipants = useCallback((awardLevel) => {
+    return participants.filter(p => {
+      if (!p?.id) return false;
+      if (drawnParticipants.has(p.id)) return false;
+      const level = p.level ?? 0;
+      return level >= awardLevel;
+    });
+  }, [participants, drawnParticipants]);
+
+  const drawWheel = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext('2d');
+    const container = canvas.parentElement;
+    if (!container) return;
+
+    const containerSize = wheelSize
+      ? Math.min(wheelSize.width, wheelSize.height) - 20
+      : DEFAULT_WHEEL_SIZE - 20;
+    const canvasSize = Math.min(container.clientWidth, container.clientHeight) || containerSize;
+
+    canvas.width = canvasSize;
+    canvas.height = canvasSize;
+
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const radius = Math.min(centerX, centerY) - 20;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const validParticipants = allParticipants();
+    const segmentCount = Math.max(validParticipants.length, MIN_PARTICIPANTS);
+
+    if (segmentCount === 0) {
+      drawEmptyWheel(ctx, centerX, centerY, radius);
+      return;
     }
-    
-    const selectedAward = awards.find(a => a.id === selectedAwardId)
-    if (!selectedAward) return []
-    
-    const awardRule = awardRules[selectedAward.id] || 'rule1'
-    
-    // 检查是否被对应规则禁用
-    if (awardRule === 'rule1' && disabledRule1Awards.has(selectedAward.id)) {
-      return []
-    }
-    if (awardRule === 'rule2' && disabledRule2Awards.has(selectedAward.id)) {
-      return []
-    }
-    
-      // 检查数量限制 - 使用手动输入的数量或外部传入的统计数量
-      const manualCount = manualDrawnCounts && manualDrawnCounts[selectedAward.id]
-      const drawnCount = manualCount !== undefined ? manualCount : (selectedAwardDrawnCount || 0)
-    
-    // 如果当前选中奖项已达到最大数量，不允许再抽
-    if (drawnCount >= selectedAward.quantity) {
-      return []
-    }
-    
-    return [selectedAward]
-  }
 
+    const anglePerSegment = (2 * Math.PI) / segmentCount;
 
-  // 绘制转盘 - 始终显示所有参与者（平均分配）
+    validParticipants.forEach((p, index) => {
+      const startAngle = index * anglePerSegment - Math.PI / 2;
+      const endAngle = (index + 1) * anglePerSegment - Math.PI / 2;
+
+      drawSegment(
+        ctx,
+        centerX,
+        centerY,
+        radius,
+        startAngle,
+        endAngle,
+        segmentColors[index % segmentColors.length]
+      );
+
+      drawParticipantText(
+        ctx,
+        centerX,
+        centerY,
+        radius,
+        startAngle,
+        endAngle,
+        p.name || `参与者${index + 1}`,
+        textFont
+      );
+    });
+  }, [allParticipants, wheelSize, segmentColors, textFont]);
+
+  const drawEmptyWheel = (ctx, centerX, centerY, radius) => {
+    ctx.fillStyle = '#f5f5f5';
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#999';
+    ctx.font = textFont;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('暂无参与者', centerX, centerY);
+  };
+
+  const drawSegment = (ctx, centerX, centerY, radius, startAngle, endAngle, color) => {
+    ctx.fillStyle = color;
+    ctx.strokeStyle = '#91d5ff';
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  };
+
+  const drawParticipantText = (ctx, centerX, centerY, radius, startAngle, endAngle, text, font) => {
+    ctx.save();
+    ctx.translate(centerX, centerY);
+    ctx.rotate(startAngle + (endAngle - startAngle) / 2);
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#000';
+    ctx.font = font;
+
+    const maxWidth = radius * 0.7;
+    const measured = ctx.measureText(text);
+    let display = text;
+
+    if (measured.width > maxWidth) {
+      let t = text;
+      while (ctx.measureText(t + '...').width > maxWidth && t.length > 0) {
+        t = t.slice(0, -1);
+      }
+      display = t + '...';
+    }
+
+    ctx.fillText(display, radius * 0.6, 0);
+    ctx.restore();
+  };
+
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+    drawWheel();
 
-    const ctx = canvas.getContext('2d')
-    
-    // 使用传入的wheelSize或默认大小
-    const containerSize = wheelSize ? Math.min(wheelSize.width, wheelSize.height) - 20 : 380
-    canvas.width = containerSize
-    canvas.height = containerSize
-
-    const centerX = canvas.width / 2
-    const centerY = canvas.height / 2
-    const radius = Math.min(centerX, centerY) - 20
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-    const segmentCount = participants.length || 1
-    
-    if (segmentCount === 0 || participants.length === 0) {
-      // 如果没有参与者，绘制一个空转盘
-      ctx.fillStyle = '#f5f5f5'
-      ctx.strokeStyle = '#ddd'
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI)
-      ctx.fill()
-      ctx.stroke()
-    } else {
-      const anglePerSegment = (2 * Math.PI) / segmentCount
-
-      // 绘制转盘 - 显示所有参与者
-      participants.forEach((participant, index) => {
-        const startAngle = index * anglePerSegment - Math.PI / 2
-        const endAngle = (index + 1) * anglePerSegment - Math.PI / 2
-
-        // 交替颜色，不再根据是否抽中来改变颜色
-        ctx.fillStyle = index % 2 === 0 ? '#e6f7ff' : '#bae7ff'
-        ctx.strokeStyle = '#91d5ff'
-        ctx.lineWidth = 2
-
-        ctx.beginPath()
-        ctx.moveTo(centerX, centerY)
-        ctx.arc(centerX, centerY, radius, startAngle, endAngle)
-        ctx.closePath()
-        ctx.fill()
-        ctx.stroke()
-
-        // 绘制文字
-        ctx.save()
-        ctx.translate(centerX, centerY)
-        ctx.rotate(startAngle + anglePerSegment / 2)
-        ctx.textAlign = 'left'
-        ctx.textBaseline = 'middle'
-        ctx.fillStyle = '#000'
-        ctx.font = '16px Arial'
-        const text = participant.name || `参与者${index + 1}`
-        ctx.fillText(text, radius * 0.6, 0)
-        ctx.restore()
-      })
-    }
-
-    // 指针在转盘外部绘制，固定在正下方
-    // 指针不随转盘旋转，所以在这里不绘制
-    
-    // 监听容器大小变化
-    let resizeObserver = null
-    if (typeof ResizeObserver !== 'undefined') {
-      resizeObserver = new ResizeObserver(() => {
-        // 延迟执行，避免频繁重绘
-        setTimeout(() => {
-          const canvas = canvasRef.current
-          if (canvas) {
-            const container = canvas.parentElement
-            if (container) {
-              const containerWidth = container.clientWidth
-              const containerHeight = container.clientHeight
-              const size = Math.min(containerWidth, containerHeight)
-              
-              if (canvas.width !== size || canvas.height !== size) {
-                canvas.width = size
-                canvas.height = size
-                
-                // 重新绘制
-                const ctx = canvas.getContext('2d')
-                const centerX = canvas.width / 2
-                const centerY = canvas.height / 2
-                const radius = Math.min(centerX, centerY) - 20
-                
-                ctx.clearRect(0, 0, canvas.width, canvas.height)
-                
-                const segmentCount = participants.length || 1
-                if (segmentCount > 0 && participants.length > 0) {
-                  const anglePerSegment = (2 * Math.PI) / segmentCount
-                  participants.forEach((participant, index) => {
-                    const startAngle = index * anglePerSegment - Math.PI / 2
-                    const endAngle = (index + 1) * anglePerSegment - Math.PI / 2
-                    
-                    ctx.fillStyle = index % 2 === 0 ? '#e6f7ff' : '#bae7ff'
-                    ctx.strokeStyle = '#91d5ff'
-                    ctx.lineWidth = 2
-                    
-                    ctx.beginPath()
-                    ctx.moveTo(centerX, centerY)
-                    ctx.arc(centerX, centerY, radius, startAngle, endAngle)
-                    ctx.closePath()
-                    ctx.fill()
-                    ctx.stroke()
-                    
-                    ctx.save()
-                    ctx.translate(centerX, centerY)
-                    ctx.rotate(startAngle + anglePerSegment / 2)
-                    ctx.textAlign = 'left'
-                    ctx.textBaseline = 'middle'
-                    ctx.fillStyle = '#000'
-                    ctx.font = '16px Arial'
-                    const text = participant.name || `参与者${index + 1}`
-                    ctx.fillText(text, radius * 0.6, 0)
-                    ctx.restore()
-                  })
-                }
-              }
-            }
-          }
-        }, 100)
-      })
-      
-      const container = canvas.parentElement
+    if (typeof ResizeObserver !== 'undefined' && canvasRef.current) {
+      const container = canvasRef.current.parentElement;
       if (container) {
-        resizeObserver.observe(container)
+        resizeObserverRef.current = new ResizeObserver(() => {
+          requestAnimationFrame(() => drawWheel());
+        });
+
+        resizeObserverRef.current.observe(container);
       }
     }
-    
+
     return () => {
-      if (resizeObserver) {
-        resizeObserver.disconnect()
-      }
-    }
-  }, [participants, rotation, wheelSize])
+      if (resizeObserverRef.current) resizeObserverRef.current.disconnect();
+    };
+  }, [drawWheel]);
+
+  useEffect(() => {
+    drawWheel();
+  }, [participants, drawWheel]);
 
   const handleSpin = () => {
-    if (isSpinning) return
+    if (isSpinning) return;
 
-    const availableParticipants = getAvailableParticipants()
-    const availableAwards = getAvailableAwards()
-
-    // 如果没有选中奖项，提示选择奖项
+    const validAwards = availableAwards();
     if (!selectedAwardId) {
-      alert('请先选择一个奖项！')
-      return
+      alert('请先选择一个奖项！');
+      return;
     }
 
-    // 如果当前选中的奖项已经抽完，不允许再抽
-    if (availableAwards.length === 0) {
-      const selectedAward = awards.find(a => a.id === selectedAwardId)
-      if (selectedAward) {
-        alert(`当前奖项"${selectedAward.name}"已达到最大抽取数量，无法继续抽取！`)
-      } else {
-        alert('当前选中的奖项不存在！')
-      }
-      return
+    const award = awards.find(a => a.id === selectedAwardId);
+    if (!award) {
+      alert('奖项不存在！');
+      return;
     }
 
-    if (availableParticipants.length === 0) {
-      alert('没有可用的参与者！')
-      return
+    const manual = manualDrawnCounts[award.id];
+    const drawnCount = manual ?? selectedAwardDrawnCount;
+    const remaining = award.quantity - drawnCount;
+
+    const awardLevel = award.level ?? 0;
+    const validParticipants = availableParticipants(awardLevel);
+
+    if (validAwards.length === 0) {
+      alert(`当前奖项 “${award.name}” 已达到最大数量（${drawnCount}/${award.quantity}）`);
+      return;
     }
 
-    setIsSpinning(true)
-
-    // 直接使用当前选中的奖项
-    const selectedAward = availableAwards[0]
-
-    // 根据奖项规则选择参与者
-    let selectedParticipant = null
-    const awardRule = awardRules[selectedAward.id] || 'rule1'
-    
-    if (awardRule === 'rule1') {
-      // 规则1：平均分配，不考虑权重
-      const randomIndex = Math.floor(Math.random() * availableParticipants.length)
-      selectedParticipant = availableParticipants[randomIndex]
-    } else {
-      // 规则2：根据权重计算概率
-      const totalWeight = availableParticipants.reduce((sum, p) => sum + (p.weight || 1), 0)
-      const random = Math.random() * totalWeight
-      let cumulativeWeight = 0
-
-      for (const participant of availableParticipants) {
-        cumulativeWeight += participant.weight || 1
-        if (random <= cumulativeWeight) {
-          selectedParticipant = participant
-          break
-        }
-      }
-
-      if (!selectedParticipant) {
-        selectedParticipant = availableParticipants[0]
-      }
+    if (validParticipants.length === 0) {
+      alert(`没有符合条件的参与者可抽奖`);
+      return;
     }
 
-    // 计算旋转角度 - 指针在正上方（-90度或270度），需要让选中的参与者停在正上方
-    const participantIndex = participants.findIndex(p => p.id === selectedParticipant.id)
-    const segmentCount = participants.length
-    const anglePerSegment = 360 / segmentCount
-    
-    // 计算选中参与者的中心角度（从顶部-90度开始，顺时针）
-    // 转盘从顶部（-90度）开始绘制，所以：
-    // 第0个参与者的中心角度 = -90度 + anglePerSegment / 2
-    // 转换为0-360度系统：(-90 + anglePerSegment / 2 + 360) % 360
-    const participantCenterAngle = (-90 + participantIndex * anglePerSegment + anglePerSegment / 2 + 360) % 360
-    
-    // 指针在正上方（-90度或270度位置）
-    // 需要让参与者的中心角度转到-90度位置（即270度）
-    // 目标：participantCenterAngle + 当前角度 + 新旋转角度 = 270度
-    // 新旋转角度 = 270 - participantCenterAngle - (当前角度 % 360)
-    const currentAngle = rotation % 360
-    let targetAngle = 270 - participantCenterAngle - currentAngle
-    
-    // 确保角度在合理范围内
-    if (targetAngle < 0) {
-      targetAngle += 360
+    if (typeof onDraw !== 'function') return;
+
+    setIsSpinning(true);
+
+    const selected = selectParticipantByLevel(award, validParticipants);
+    if (!selected) {
+      alert('抽奖失败，请检查参与者!');
+      setIsSpinning(false);
+      return;
     }
-    
-    // 转多圈增加视觉效果
-    const spins = 5 * 360
-    const finalRotation = rotation + spins + targetAngle
 
-    setRotation(finalRotation)
+    const allList = allParticipants();
+    const finalRotation = calculateFinalRotation(selected, allList);
 
-    // 动画结束后触发抽奖结果
+    setRotation(finalRotation);
+
     setTimeout(() => {
-      setIsSpinning(false)
-      onDraw(selectedParticipant, selectedAward)
-    }, 3000)
-  }
+      setIsSpinning(false);
+      onDraw(selected, award);
+    }, SPIN_DURATION);
+  };
 
-  const containerSize = wheelSize ? Math.min(wheelSize.width, wheelSize.height) : 400
+  const selectParticipantByLevel = (award, list) => {
+    if (!list.length) return null;
+
+    const level = award.level ?? 0;
+
+    if (level <= 1) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    const totalWeight = list.reduce((sum, p) => sum + (p.weight || 0), 0);
+    if (totalWeight <= 0) {
+      return list[Math.floor(Math.random() * list.length)];
+    }
+
+    let r = Math.random() * totalWeight;
+    for (const p of list) {
+      r -= p.weight || 0;
+      if (r <= 0) return p;
+    }
+    return list[list.length - 1];
+  };
+
+  const calculateFinalRotation = (target, list) => {
+    const len = list.length;
+    const anglePer = 360 / len;
+    const current = rotation % 360;
+
+    const index = list.findIndex(p => p.id === target.id);
+    const centerAngle = (-90 + index * anglePer + anglePer / 2 + 360) % 360;
+
+    let targetAngle = 270 - centerAngle - current;
+    if (targetAngle < 0) targetAngle += 360;
+
+    return rotation + spinCycles * 360 + targetAngle;
+  };
+
+  const getContainerSize = () => {
+    if (wheelSize) return Math.min(wheelSize.width, wheelSize.height);
+    return DEFAULT_WHEEL_SIZE;
+  };
 
   return (
-    <div className="lottery-wheel">
-      <div 
+    <div className="lottery-wheel" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+      <div
         className="wheel-container-wrapper"
         style={{
-          width: `${containerSize}px`,
-          height: `${containerSize}px`
+          width: `${getContainerSize()}px`,
+          height: `${getContainerSize()}px`,
+          position: 'relative',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
         }}
       >
-        {/* 指针固定在正上方 */}
-        <div className="wheel-pointer-top"></div>
+        <div
+          className="wheel-pointer-top"
+          style={{
+            position: 'absolute',
+            top: 0,
+            width: 0,
+            height: 0,
+            borderLeft: '15px solid transparent',
+            borderRight: '15px solid transparent',
+            borderBottom: `25px solid ${pointerColor}`,
+            zIndex: 10,
+            transform: 'translateY(-50%)',
+          }}
+        />
+
         <div
           className="wheel-wrapper"
           style={{
             transform: `rotate(${rotation}deg)`,
-            transition: isSpinning ? 'transform 3s cubic-bezier(0.17, 0.67, 0.12, 0.99)' : 'none'
+            transition: isSpinning ? `transform ${SPIN_DURATION}ms cubic-bezier(0.17, 0.67, 0.12, 0.99)` : 'none',
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
           }}
         >
           <canvas
             ref={canvasRef}
-            width={containerSize - 20}
-            height={containerSize - 20}
             className="wheel-canvas"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '100%',
+              borderRadius: '50%',
+            }}
           />
         </div>
       </div>
+
       <button
         className="spin-button"
         onClick={handleSpin}
         disabled={isSpinning}
+        style={{
+          marginTop: '20px',
+          padding: '12px 36px',
+          fontSize: '18px',
+          backgroundColor: isSpinning ? '#ccc' : '#1890ff',
+          color: '#fff',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: isSpinning ? 'not-allowed' : 'pointer',
+          transition: 'background-color 0.3s',
+        }}
       >
-        {isSpinning ? '抽奖中...' : '开始抽奖'}
+        {isSpinning ? spinningText : buttonText}
       </button>
     </div>
-  )
+  );
 }
 
-export default LotteryWheel
-
+export default LotteryWheel;

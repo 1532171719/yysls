@@ -9,7 +9,6 @@ import './AdminPage.css'
 function AdminPage({
   participants,
   awards,
-  awardRules,
   backgroundImage,
   backgroundOpacity,
   titleStyle,
@@ -19,7 +18,6 @@ function AdminPage({
           awardListSize,
           onParticipantsChange,
           onAwardsChange,
-          onAwardRulesChange,
           onBackgroundImageChange,
           onBackgroundOpacityChange,
           onTitleStyleChange,
@@ -29,7 +27,7 @@ function AdminPage({
           onAwardListSizeChange,
           onBack
 }) {
-  const [activeTab, setActiveTab] = useState('participants')
+  const [activeTab, setActiveTab] = useState('awards')
 
   return (
     <div className="admin-page">
@@ -79,14 +77,13 @@ function AdminPage({
         {activeTab === 'participants' ? (
           <ParticipantSettings
             participants={participants}
+            awards={awards}
             onParticipantsChange={onParticipantsChange}
           />
         ) : activeTab === 'awards' ? (
           <AwardSettings
             awards={awards}
-            awardRules={awardRules}
             onAwardsChange={onAwardsChange}
-            onAwardRulesChange={onAwardRulesChange}
           />
         ) : activeTab === 'background' ? (
           <BackgroundSettings

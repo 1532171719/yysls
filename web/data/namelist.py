@@ -25,7 +25,8 @@ try:
         # 尝试从不同的列名中获取数据
         # 常见的列名：姓名、名字、name、Name、权重、weight、Weight、概率等
         name = ''
-        weight = 1
+        weight = 0  # 默认权重为0
+        level = 0  # 默认等级为0
         
         # 查找姓名列
         if '姓名' in row and pd.notna(row['姓名']):
@@ -50,31 +51,79 @@ try:
             try:
                 weight = float(row['权重'])
             except (ValueError, TypeError):
-                weight = 1
+                weight = 0
         elif 'weight' in row and pd.notna(row['weight']):
             try:
                 weight = float(row['weight'])
             except (ValueError, TypeError):
-                weight = 1
+                weight = 0
         elif 'Weight' in row and pd.notna(row['Weight']):
             try:
                 weight = float(row['Weight'])
             except (ValueError, TypeError):
-                weight = 1
-        elif '概率' in row and pd.notna(row['概率']):
-            try:
-                weight = float(row['概率'])
-            except (ValueError, TypeError):
-                weight = 1
+                weight = 0
         else:
-            # 如果没有找到，尝试使用第二列
+            # 如果没有找到，尝试使用第二列（如果第二列是数字）
             if len(row) > 1:
                 second_col = row.index[1]
-                if pd.notna(row[second_col]):
+                # 检查第二列是否是权重列（通过检查列名）
+                if '权重' in second_col or 'weight' in second_col.lower() or 'Weight' in second_col:
+                    if pd.notna(row[second_col]):
+                        try:
+                            weight = float(row[second_col])
+                        except (ValueError, TypeError):
+                            weight = 0
+                # 如果第二列是等级列，则第三列可能是权重
+                elif '等级' in second_col or 'level' in second_col.lower() or 'Level' in second_col:
+                    weight = 0  # 保持默认值
+                # 如果第二列是数字，可能是权重或等级（需要进一步判断）
+                else:
+                    if pd.notna(row[second_col]):
+                        try:
+                            # 尝试作为权重处理
+                            weight = float(row[second_col])
+                        except (ValueError, TypeError):
+                            weight = 0
+        
+        # 查找等级列
+        if '等级' in row and pd.notna(row['等级']):
+            try:
+                level = int(float(row['等级']))
+            except (ValueError, TypeError):
+                level = 0
+        elif 'level' in row and pd.notna(row['level']):
+            try:
+                level = int(float(row['level']))
+            except (ValueError, TypeError):
+                level = 0
+        elif 'Level' in row and pd.notna(row['Level']):
+            try:
+                level = int(float(row['Level']))
+            except (ValueError, TypeError):
+                level = 0
+        else:
+            # 如果没有找到，尝试根据列的位置判断
+            # 如果第三列存在且不是图片列，可能是等级列
+            if len(row) > 2:
+                third_col = row.index[2]
+                # 检查是否是等级列
+                if '等级' in third_col or 'level' in third_col.lower() or 'Level' in third_col:
+                    if pd.notna(row[third_col]):
+                        try:
+                            level = int(float(row[third_col]))
+                        except (ValueError, TypeError):
+                            level = 0
+                # 如果第二列是权重，第三列可能是等级
+                elif pd.notna(row[third_col]):
                     try:
-                        weight = float(row[second_col])
+                        # 尝试作为等级处理（整数）
+                        level_val = float(row[third_col])
+                        if level_val == int(level_val):
+                            level = int(level_val)
+                        else:
+                            level = 0
                     except (ValueError, TypeError):
-                        weight = 1
+                        level = 0
         
         # 如果姓名为空，跳过
         if not name:
@@ -83,7 +132,8 @@ try:
         
         participants.append({
             'name': name,
-            'weight': weight
+            'weight': weight,
+            'level': level
         })
     
     # 保存为JSON文件

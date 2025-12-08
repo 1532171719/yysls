@@ -9,7 +9,6 @@ function App() {
   const [currentPage, setCurrentPage] = useState('home')
   const [participants, setParticipants] = useState([])
   const [awards, setAwards] = useState([])
-  const [awardRules, setAwardRules] = useState({}) // { awardId: 'rule1' | 'rule2' }
   const [backgroundImage, setBackgroundImage] = useState('')
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.5)
   const [titleStyle, setTitleStyle] = useState({
@@ -34,7 +33,6 @@ function App() {
     if (savedData) {
       if (savedData.participants) setParticipants(savedData.participants)
       if (savedData.awards) setAwards(savedData.awards)
-      if (savedData.awardRules) setAwardRules(savedData.awardRules)
       if (savedData.backgroundImage !== undefined) setBackgroundImage(savedData.backgroundImage)
       if (savedData.backgroundOpacity !== undefined) setBackgroundOpacity(savedData.backgroundOpacity)
       if (savedData.titleStyle) setTitleStyle(savedData.titleStyle)
@@ -52,7 +50,6 @@ function App() {
     const data = {
       participants,
       awards,
-      awardRules,
       backgroundImage,
       backgroundOpacity,
       titleStyle,
@@ -64,7 +61,7 @@ function App() {
       winnerMessageSize
     }
     saveData(data)
-  }, [participants, awards, awardRules, backgroundImage, backgroundOpacity, titleStyle, wheelPosition, wheelSize, awardListPosition, awardListSize, winnerMessagePosition, winnerMessageSize])
+  }, [participants, awards, backgroundImage, backgroundOpacity, titleStyle, wheelPosition, wheelSize, awardListPosition, awardListSize, winnerMessagePosition, winnerMessageSize])
 
   const handleGoToAdmin = () => {
     setShowPasswordModal(true)
@@ -85,7 +82,6 @@ function App() {
         <HomePage
           participants={participants}
           awards={awards}
-          awardRules={awardRules}
           backgroundImage={backgroundImage}
           backgroundOpacity={backgroundOpacity}
           titleStyle={titleStyle}
@@ -103,7 +99,6 @@ function App() {
         <AdminPage
           participants={participants}
           awards={awards}
-          awardRules={awardRules}
           backgroundImage={backgroundImage}
           backgroundOpacity={backgroundOpacity}
           titleStyle={titleStyle}
@@ -113,7 +108,6 @@ function App() {
           awardListSize={awardListSize}
           onParticipantsChange={setParticipants}
           onAwardsChange={setAwards}
-          onAwardRulesChange={setAwardRules}
           onBackgroundImageChange={setBackgroundImage}
           onBackgroundOpacityChange={setBackgroundOpacity}
           onTitleStyleChange={setTitleStyle}

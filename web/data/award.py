@@ -26,7 +26,7 @@ try:
         # 常见的列名：奖项名称、名称、name、Name、奖项等
         name = ''
         quantity = 1
-        rule = 'rule1'  # 默认规则1
+        level = 0  # 奖项等级，默认为0
         image = ''  # 图片路径，可选
         
         # 查找奖项名称列
@@ -73,25 +73,31 @@ try:
                     except (ValueError, TypeError):
                         quantity = 1
         
-        # 查找规则列
-        if '规则' in row and pd.notna(row['规则']):
-            rule_str = str(row['规则']).strip().lower()
-            if 'rule1' in rule_str or '规则1' in rule_str or rule_str == '1':
-                rule = 'rule1'
-            elif 'rule2' in rule_str or '规则2' in rule_str or rule_str == '2':
-                rule = 'rule2'
-        elif 'rule' in row and pd.notna(row['rule']):
-            rule_str = str(row['rule']).strip().lower()
-            if 'rule1' in rule_str or rule_str == '1':
-                rule = 'rule1'
-            elif 'rule2' in rule_str or rule_str == '2':
-                rule = 'rule2'
-        elif 'Rule' in row and pd.notna(row['Rule']):
-            rule_str = str(row['Rule']).strip().lower()
-            if 'rule1' in rule_str or rule_str == '1':
-                rule = 'rule1'
-            elif 'rule2' in rule_str or rule_str == '2':
-                rule = 'rule2'
+        # 查找等级列
+        if '等级' in row and pd.notna(row['等级']):
+            try:
+                level = int(float(row['等级']))
+            except (ValueError, TypeError):
+                level = 0
+        elif 'level' in row and pd.notna(row['level']):
+            try:
+                level = int(float(row['level']))
+            except (ValueError, TypeError):
+                level = 0
+        elif 'Level' in row and pd.notna(row['Level']):
+            try:
+                level = int(float(row['Level']))
+            except (ValueError, TypeError):
+                level = 0
+        else:
+            # 如果没有找到，尝试使用第三列（如果存在）
+            if len(row) > 2:
+                third_col = row.index[2]
+                if pd.notna(row[third_col]):
+                    try:
+                        level = int(float(row[third_col]))
+                    except (ValueError, TypeError):
+                        level = 0
         
         # 查找图片路径列
         if '图片' in row and pd.notna(row['图片']):
@@ -123,7 +129,7 @@ try:
         awards.append({
             'name': name,
             'quantity': quantity,
-            'rule': rule,
+            'level': level,
             'image': image
         })
     
@@ -143,7 +149,7 @@ try:
     print('\n字段说明:')
     print('- name: 奖项名称（必填）')
     print('- quantity: 奖项数量（必填，默认为1）')
-    print('- rule: 抽奖规则（必填，rule1 或 rule2，默认为 rule1）')
+    print('- level: 奖项等级（必填，默认为0）')
     print('- image: 图片路径（可选，默认为 /素材库/奖项1.png）')
     
 except FileNotFoundError as e:

@@ -1,16 +1,17 @@
 import React, { useState, useEffect } from 'react'
 import './AwardSettings.css'
 
-function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange }) {
+function AwardSettings({ awards, onAwardsChange }) {
   const [localAwards, setLocalAwards] = useState(
-    awards.length > 0 ? awards : [{ id: Date.now(), name: '', quantity: 1, rule: 'rule1', image: '/素材库/奖项1.png' }]
+    awards.length > 0 ? awards : [{ id: Date.now(), name: '', quantity: 1, level: 0, image: '/素材库/奖项1.png' }]
   )
 
   useEffect(() => {
     if (awards.length > 0) {
       setLocalAwards(awards.map(a => ({
         ...a,
-        image: a.image || '/素材库/奖项1.png'
+        image: a.image || '/素材库/奖项1.png',
+        level: a.level !== undefined ? a.level : 0
       })))
     }
   }, [awards])
@@ -18,7 +19,7 @@ function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange 
   const handleAddRow = () => {
     setLocalAwards([
       ...localAwards,
-      { id: Date.now(), name: '', quantity: 1, rule: 'rule1', image: '/素材库/奖项1.png' }
+      { id: Date.now(), name: '', quantity: 1, level: 0, image: '/素材库/奖项1.png' }
     ])
   }
 
@@ -27,27 +28,22 @@ function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange 
       const newAwards = localAwards.filter(a => a.id !== id)
       setLocalAwards(newAwards)
       onAwardsChange(newAwards)
-      
-      // 同时删除对应的规则
-      const newRules = { ...awardRules }
-      delete newRules[id]
-      onAwardRulesChange(newRules)
     }
   }
 
   const handleChange = (id, field, value) => {
     const newAwards = localAwards.map(a => {
       if (a.id === id) {
-        return { ...a, [field]: field === 'quantity' ? parseInt(value) || 1 : value }
+        if (field === 'quantity') {
+          return { ...a, quantity: parseInt(value) || 1 }
+        } else if (field === 'level') {
+          return { ...a, level: parseInt(value) || 0 }
+        }
+        return { ...a, [field]: value }
       }
       return a
     })
     setLocalAwards(newAwards)
-  }
-
-  const handleRuleChange = (id, rule) => {
-    const newRules = { ...awardRules, [id]: rule }
-    onAwardRulesChange(newRules)
   }
 
   const handleSave = () => {
@@ -98,21 +94,12 @@ function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange 
             id: Date.now() + index,
             name: item.name || '',
             quantity: parseInt(item.quantity) || 1,
-            rule: item.rule || 'rule1',
+            level: item.level !== undefined ? parseInt(item.level) : 0,
             image: item.image || '/素材库/奖项1.png'
           }))
 
-          // 导入规则
-          const importedRules = {}
-          importedAwards.forEach((award, index) => {
-            if (data[index] && data[index].rule) {
-              importedRules[award.id] = data[index].rule
-            }
-          })
-
           setLocalAwards(importedAwards)
           onAwardsChange(importedAwards)
-          onAwardRulesChange(importedRules)
           alert(`成功导入 ${importedAwards.length} 条记录`)
         } catch (error) {
           alert('导入失败：' + error.message)
@@ -130,7 +117,7 @@ function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange 
           <tr>
             <th>奖项名</th>
             <th>奖项数量</th>
-            <th>奖项规则</th>
+            <th>奖项等级</th>
             <th>奖项图片</th>
             <th>操作</th>
           </tr>
@@ -157,14 +144,13 @@ function AwardSettings({ awards, awardRules, onAwardsChange, onAwardRulesChange 
                 />
               </td>
               <td>
-                <select
-                  value={awardRules[award.id] || 'rule1'}
-                  onChange={(e) => handleRuleChange(award.id, e.target.value)}
-                  className="rule-select"
-                >
-                  <option value="rule1">规则1：抽中不再中</option>
-                  <option value="rule2">规则2：在规则1的基础上，其他属于规则2的也不能再抽中</option>
-                </select>
+                <input
+                  type="number"
+                  value={award.level !== undefined ? award.level : 0}
+                  onChange={(e) => handleChange(award.id, 'level', e.target.value)}
+                  min="0"
+                  className="table-input"
+                />
               </td>
               <td>
                 <div className="image-select-container">
