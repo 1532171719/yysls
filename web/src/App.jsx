@@ -11,6 +11,7 @@ function App() {
   const [awards, setAwards] = useState([])
   const [backgroundImage, setBackgroundImage] = useState('')
   const [backgroundOpacity, setBackgroundOpacity] = useState(0.5)
+  const [titleText, setTitleText] = useState('我真是服啦百业周年庆！')
   const [titleStyle, setTitleStyle] = useState({
     fontSize: 36,
     color: '#1890ff',
@@ -35,6 +36,7 @@ function App() {
       if (savedData.awards) setAwards(savedData.awards)
       if (savedData.backgroundImage !== undefined) setBackgroundImage(savedData.backgroundImage)
       if (savedData.backgroundOpacity !== undefined) setBackgroundOpacity(savedData.backgroundOpacity)
+      if (savedData.titleText !== undefined) setTitleText(savedData.titleText)
       if (savedData.titleStyle) setTitleStyle(savedData.titleStyle)
       if (savedData.wheelPosition) setWheelPosition(savedData.wheelPosition)
       if (savedData.wheelSize) setWheelSize(savedData.wheelSize)
@@ -52,6 +54,7 @@ function App() {
       awards,
       backgroundImage,
       backgroundOpacity,
+      titleText,
       titleStyle,
       wheelPosition,
       wheelSize,
@@ -61,7 +64,7 @@ function App() {
       winnerMessageSize
     }
     saveData(data)
-  }, [participants, awards, backgroundImage, backgroundOpacity, titleStyle, wheelPosition, wheelSize, awardListPosition, awardListSize, winnerMessagePosition, winnerMessageSize])
+  }, [participants, awards, backgroundImage, backgroundOpacity, titleText, titleStyle, wheelPosition, wheelSize, awardListPosition, awardListSize, winnerMessagePosition, winnerMessageSize])
 
   const handleGoToAdmin = () => {
     setShowPasswordModal(true)
@@ -84,6 +87,7 @@ function App() {
           awards={awards}
           backgroundImage={backgroundImage}
           backgroundOpacity={backgroundOpacity}
+          titleText={titleText}
           titleStyle={titleStyle}
           wheelPosition={wheelPosition}
           wheelSize={wheelSize}
@@ -101,6 +105,7 @@ function App() {
           awards={awards}
           backgroundImage={backgroundImage}
           backgroundOpacity={backgroundOpacity}
+          titleText={titleText}
           titleStyle={titleStyle}
           wheelPosition={wheelPosition}
           wheelSize={wheelSize}
@@ -110,6 +115,7 @@ function App() {
           onAwardsChange={setAwards}
           onBackgroundImageChange={setBackgroundImage}
           onBackgroundOpacityChange={setBackgroundOpacity}
+          onTitleTextChange={setTitleText}
           onTitleStyleChange={setTitleStyle}
           onWheelPositionChange={setWheelPosition}
           onWheelSizeChange={setWheelSize}

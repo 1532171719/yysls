@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import './TitleSettings.css'
 
-function TitleSettings({ titleStyle, onTitleStyleChange }) {
+function TitleSettings({ titleText, titleStyle, onTitleTextChange, onTitleStyleChange }) {
+  const [localText, setLocalText] = useState(titleText || '我真是服啦百业周年庆！')
   const [localStyle, setLocalStyle] = useState({
     fontSize: titleStyle?.fontSize || 36,
     color: titleStyle?.color || '#1890ff',
@@ -10,6 +11,10 @@ function TitleSettings({ titleStyle, onTitleStyleChange }) {
     textShadow: titleStyle?.textShadow || '2px 2px 4px rgba(0, 0, 0, 0.1)',
     letterSpacing: titleStyle?.letterSpacing || 2
   })
+
+  useEffect(() => {
+    setLocalText(titleText || '我真是服啦百业周年庆！')
+  }, [titleText])
 
   useEffect(() => {
     if (titleStyle) {
@@ -24,6 +29,12 @@ function TitleSettings({ titleStyle, onTitleStyleChange }) {
     }
   }, [titleStyle])
 
+  const handleTextChange = (e) => {
+    const value = e.target.value
+    setLocalText(value)
+    onTitleTextChange(value)
+  }
+
   const handleChange = (field, value) => {
     const newStyle = { ...localStyle, [field]: value }
     setLocalStyle(newStyle)
@@ -32,6 +43,20 @@ function TitleSettings({ titleStyle, onTitleStyleChange }) {
 
   return (
     <div className="title-settings">
+      <div className="setting-group">
+        <label className="setting-label">标题内容</label>
+        <input
+          type="text"
+          value={localText}
+          onChange={handleTextChange}
+          placeholder="请输入标题内容"
+          className="setting-input"
+        />
+        <div className="setting-hint">
+          修改主页显示的标题文字
+        </div>
+      </div>
+
       <div className="setting-group">
         <label className="setting-label">字体大小: {localStyle.fontSize}px</label>
         <input
@@ -127,7 +152,7 @@ function TitleSettings({ titleStyle, onTitleStyleChange }) {
               letterSpacing: `${localStyle.letterSpacing}px`
             }}
           >
-            我真是服啦百业周年庆！
+            {localText}
           </h1>
         </div>
       </div>

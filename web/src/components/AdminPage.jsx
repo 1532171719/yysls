@@ -11,6 +11,7 @@ function AdminPage({
   awards,
   backgroundImage,
   backgroundOpacity,
+  titleText,
   titleStyle,
           wheelPosition,
           wheelSize,
@@ -20,6 +21,7 @@ function AdminPage({
           onAwardsChange,
           onBackgroundImageChange,
           onBackgroundOpacityChange,
+          onTitleTextChange,
           onTitleStyleChange,
           onWheelPositionChange,
           onWheelSizeChange,
@@ -94,7 +96,9 @@ function AdminPage({
           />
         ) : activeTab === 'title' ? (
           <TitleSettings
+            titleText={titleText}
             titleStyle={titleStyle}
+            onTitleTextChange={onTitleTextChange}
             onTitleStyleChange={onTitleStyleChange}
           />
         ) : (

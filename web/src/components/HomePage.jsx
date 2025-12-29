@@ -9,6 +9,7 @@ function HomePage({
   awards,
   backgroundImage,
   backgroundOpacity,
+  titleText,
   titleStyle,
   wheelPosition,
   wheelSize,
@@ -124,20 +125,33 @@ function HomePage({
 
   const selectedAward = awards.find(a => a.id === selectedAwardId);
 
+  // 调试：检查背景图片和透明度
+  console.log('背景图片路径:', backgroundImage);
+  console.log('背景透明度:', backgroundOpacity);
+
   return (
     <div
       className="home-page"
       style={{
         backgroundImage: backgroundImage ? `url(${backgroundImage})` : 'none',
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
+        backgroundColor: '#ffffff'
       }}
     >
       {backgroundImage && (
         <div
           className="background-overlay"
           style={{
-            backgroundColor: `rgba(255, 255, 255, ${1 - backgroundOpacity})`
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(255, 255, 255, ' + (1 - backgroundOpacity) + ')',
+            pointerEvents: 'none',
+            zIndex: 0
           }}
         />
       )}
@@ -158,7 +172,7 @@ function HomePage({
               fontWeight: titleStyle?.fontWeight || 'bold'
             }}
           >
-            我真是服啦百业周年庆！
+            {titleText || '我真是服啦百业周年庆！'}
           </h1>
         </div>
 

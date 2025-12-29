@@ -1,17 +1,17 @@
 [
   {
     "name": "烏鸦鸦",
-    "weight": 100.0,
+    "weight": 1.0,
     "level": 3
   },
   {
     "name": "郭承",
-    "weight": 2.0,
+    "weight": 1.0,
     "level": 3
   },
   {
     "name": "立小夏",
-    "weight": 100.0,
+    "weight": 1.0,
     "level": 3
   },
   {
@@ -26,8 +26,8 @@
   },
   {
     "name": "魏少卿",
-    "weight": 2.0,
-    "level": 3
+    "weight": 0.0,
+    "level": 1
   },
   {
     "name": "江云熙",
@@ -36,7 +36,7 @@
   },
   {
     "name": "琴房",
-    "weight": 2.0,
+    "weight": 1.0,
     "level": 3
   },
   {
@@ -46,18 +46,18 @@
   },
   {
     "name": "肥鱼",
-    "weight": 4.0,
-    "level": 3
+    "weight": 0.0,
+    "level": 1
   },
   {
     "name": "大饼",
-    "weight": 4.0,
-    "level": 3
+    "weight": 0.0,
+    "level": 1
   },
   {
     "name": "披风",
-    "weight": 2.0,
-    "level": 3
+    "weight": 0.0,
+    "level": 1
   },
   {
     "name": "司徒",
@@ -71,13 +71,18 @@
   },
   {
     "name": "小有",
-    "weight": 2.0,
-    "level": 2
+    "weight": 0.0,
+    "level": 1
   },
   {
     "name": "冉冉",
     "weight": 1.0,
     "level": 2
+  },
+  {
+    "name": "生于将熄",
+    "weight": 0.0,
+    "level": 1
   },
   {
     "name": "小猫咪",
